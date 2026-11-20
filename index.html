@@ -153,7 +153,7 @@
     rain.appendChild(d);
   }
   for (let i = 0; i < 14; i++) setTimeout(spawn, i * 180);
-  setInterval(spawn, 260);
+  const rainTimer = setInterval(spawn, 260);
 
   // ---------- Suara salah ----------
   let ctx;
@@ -212,8 +212,46 @@
     b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake");
   });
 
+  // ---------- Musik + buka kartu ----------
+  const MUSIC_URL = "https://anniversary-2nd-xi.vercel.app/public/music/Lana%20Del%20Rey%20-%20Young%20and%20Beautiful(MP3_160K).mp3";
+  let entered = false;
   document.getElementById("very").addEventListener("click", () => {
-    window.location.href = CARD_URL;
+    if (entered) return;
+    entered = true;
+
+    // musik mulai tepat saat klik (ini yang membuat browser mengizinkan)
+    const music = new Audio(MUSIC_URL);
+    music.loop = true;
+    music.volume = 0;
+    music.play().catch(() => {});
+    let v = 0;
+    const fade = setInterval(() => {
+      v = Math.min(v + 0.05, 0.85);
+      music.volume = v;
+      if (v >= 0.85) clearInterval(fade);
+    }, 120);
+
+    // hentikan hujan hati, tampilkan kartu layar penuh
+    clearInterval(rainTimer);
+    rain.style.display = "none";
+    const frame = document.createElement("iframe");
+    frame.src = CARD_URL;
+    frame.allow = "autoplay; fullscreen";
+    frame.style.cssText = "position:fixed;inset:0;width:100%;height:100%;border:0;z-index:50;background:#08172d;opacity:0;transition:opacity .8s";
+    document.body.appendChild(frame);
+    requestAnimationFrame(() => requestAnimationFrame(() => { frame.style.opacity = 1; }));
+
+    // tombol kecil untuk jeda / putar musik
+    const t = document.createElement("button");
+    t.type = "button";
+    t.textContent = "♫";
+    t.setAttribute("aria-label", "Jeda atau putar musik");
+    t.style.cssText = "position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:60;width:42px;height:42px;padding:0;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:1.2rem;filter:none;background-image:none;border:1px solid rgba(255,255,255,.4)";
+    t.addEventListener("click", () => {
+      if (music.paused) { music.play(); t.style.opacity = 1; }
+      else { music.pause(); t.style.opacity = .5; }
+    });
+    document.body.appendChild(t);
   });
 </script>
 </body>
