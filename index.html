@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>How much do you love me?</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>❤️</text></svg>">
+<style>
+  :root {
+    --bg: #fff1f4;
+    --ink: #5a0f24;
+    --red: #e0173d;
+    --pink: #ff8fb1;
+    --btn-soft: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #2a0b16; --ink: #ffe3ea; --btn-soft: #3d1322; }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: Georgia, "Times New Roman", serif;
+    display: flex; align-items: center; justify-content: center;
+    padding: env(safe-area-inset-top, 0) 20px env(safe-area-inset-bottom, 0);
+    overflow: hidden;
+  }
+  body.flash { animation: flash .9s ease-out; }
+  @keyframes flash {
+    0%, 40%, 80% { background: #ff1a1a; }
+    20%, 60%, 100% { background: var(--bg); }
+  }
+  main { position: relative; z-index: 2; text-align: center; width: 100%; max-width: 420px; }
+
+  /* Hujan hati */
+  #rain { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+  .drop {
+    position: absolute; top: 0;
+    animation: fall linear forwards;
+    will-change: transform, opacity;
+  }
+  .drop svg {
+    display: block; width: 100%; height: 100%;
+    animation: beat .9s ease-in-out infinite;
+  }
+  @keyframes fall {
+    0%   { transform: translateY(-12vh); opacity: 0; }
+    12%  { opacity: 1; }
+    55%  { opacity: .9; }
+    100% { transform: translateY(108vh); opacity: 0; }
+  }
+  @keyframes beat {
+    0%, 100% { transform: scale(.8); }
+    25%  { transform: scale(1.15); }
+    45%  { transform: scale(.9); }
+    65%  { transform: scale(1.2); }
+  }
+  /* kedip bergantian merah / pink */
+  .drop.red svg  { animation: beat .9s ease-in-out infinite, blinkA 1.2s steps(1) infinite; }
+  .drop.pink svg { animation: beat .9s ease-in-out infinite, blinkB 1.2s steps(1) infinite; }
+  @keyframes blinkA { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+  @keyframes blinkB { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+
+  h1 {
+    font-size: clamp(1.9rem, 8vw, 2.6rem);
+    font-weight: 700; font-style: italic;
+    margin: 0 0 32px; line-height: 1.15;
+    text-shadow: 0 0 14px var(--bg), 0 0 6px var(--bg);
+  }
+  .buttons { display: flex; gap: 6px; justify-content: center; flex-wrap: nowrap; }
+  button {
+    font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer;
+    width: 140px; height: 127px; padding: 0 0 12px; border: 0;
+    color: #fff; background-color: transparent;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 29'%3E%3Cpath fill='%23000' d='M23.6 0c-3 0-5.5 1.6-7.6 4.3C13.9 1.6 11.4 0 8.4 0 3.8 0 0 3.7 0 8.5c0 7.2 8.6 13.1 15.2 20 .4.4 1.2.4 1.6 0C23.4 21.6 32 15.7 32 8.5 32 3.7 28.2 0 23.6 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-size: 100% 100%; background-position: center;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,.35));
+    transition: transform .15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  @media (prefers-color-scheme: dark) {
+    button { filter: drop-shadow(0 0 3px var(--pink)) drop-shadow(0 0 1px var(--pink)); }
+  }
+  button:active { transform: scale(.92); }
+  button:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; border-radius: 30px; }
+
+  #popup {
+    position: fixed; left: 50%; top: 50%;
+    transform: translate(-50%, -50%) scale(.6);
+    background: #fff; color: #d10000; border: 3px solid #d10000;
+    padding: 18px 26px; border-radius: 18px;
+    font-size: 1.5rem; font-weight: 700; white-space: nowrap;
+    opacity: 0; pointer-events: none; z-index: 10;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    transition: opacity .15s, transform .2s;
+  }
+  #popup.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+  /* Hati terobek menyembur dari tengah */
+  .shard {
+    position: fixed; left: 50%; top: 50%; z-index: 9; pointer-events: none;
+    margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2);
+    width: var(--s); height: var(--s);
+    animation: burst var(--t) cubic-bezier(.15,.8,.3,1) forwards;
+  }
+  .shard svg { display: block; width: 100%; height: 100%; filter: drop-shadow(0 0 1.5px #fff) drop-shadow(0 3px 4px rgba(0,0,0,.4)); }
+  @keyframes burst {
+    0%   { transform: translate(0, 0) scale(.2) rotate(0deg); opacity: 1; }
+    55%  { transform: translate(calc(var(--dx) * .8), calc(var(--dy) * .8)) scale(1) rotate(calc(var(--r) * .8)); opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)) scale(1.05) rotate(var(--r)); opacity: 0; }
+  }
+
+  .shake { animation: shake .4s; }
+  @keyframes shake {
+    25% { transform: translateX(-8px); } 75% { transform: translateX(8px); }
+  }
+</style>
+</head>
+<body>
+<div id="rain" aria-hidden="true"></div>
+
+<main>
+  <h1>How much do you love me?</h1>
+  <div class="buttons">
+    <button id="little" type="button">Lil bit</button>
+    <button id="very" type="button">Very much</button>
+  </div>
+</main>
+<div id="popup" role="alert">❌ You're dumb ❌</div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><mask id="crack" maskUnits="userSpaceOnUse" x="0" y="0" width="32" height="29"><rect width="32" height="29" fill="#fff"/><polyline points="17,-1 14,6 19,11 13,17 18,22 16,30" fill="none" stroke="#000" stroke-width="3.4" stroke-linejoin="miter"/></mask></defs></svg>
+
+<script>
+  // Link kartu surat:
+  const CARD_URL = "https://anniversary-2nd-xi.vercel.app/";
+
+  // ---------- Hujan hati ----------
+  const rain = document.getElementById("rain");
+  const HEART = '<svg viewBox="0 0 32 29"><path fill="COLOR" d="M23.6 0c-3 0-5.5 1.6-7.6 4.3C13.9 1.6 11.4 0 8.4 0 3.8 0 0 3.7 0 8.5c0 7.2 8.6 13.1 15.2 20 .4.4 1.2.4 1.6 0C23.4 21.6 32 15.7 32 8.5 32 3.7 28.2 0 23.6 0z"/></svg>';
+  let n = 0;
+  function spawn() {
+    if (document.hidden) return;
+    const red = n++ % 2 === 0;               // bergantian merah / pink
+    const d = document.createElement("div");
+    const size = 18 + Math.random() * 30;
+    d.className = "drop " + (red ? "red" : "pink");
+    d.style.left = Math.random() * 100 + "%";
+    d.style.width = size + "px";
+    d.style.height = size * 0.9 + "px";
+    d.style.animationDuration = (4.5 + Math.random() * 3.5) + "s";
+    d.innerHTML = HEART.replace("COLOR", red ? "#e0173d" : "#ff8fb1");
+    d.addEventListener("animationend", () => d.remove());
+    rain.appendChild(d);
+  }
+  for (let i = 0; i < 14; i++) setTimeout(spawn, i * 180);
+  setInterval(spawn, 260);
+
+  // ---------- Suara salah ----------
+  let ctx;
+  function buzz() {
+    try {
+      ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+      if (ctx.state === "suspended") ctx.resume();
+      [0, 0.28].forEach(t => {
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = "sawtooth";
+        o.frequency.setValueAtTime(150, ctx.currentTime + t);
+        g.gain.setValueAtTime(0.0001, ctx.currentTime + t);
+        g.gain.exponentialRampToValueAtTime(0.4, ctx.currentTime + t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + 0.22);
+        o.connect(g).connect(ctx.destination);
+        o.start(ctx.currentTime + t);
+        o.stop(ctx.currentTime + t + 0.25);
+      });
+    } catch (e) {}
+  }
+
+  // Hati terobek: menyembur dari tengah layar
+  const BROKEN = '<svg viewBox="0 0 32 29"><path mask="url(#crack)" fill="COLOR" d="M23.6 0c-3 0-5.5 1.6-7.6 4.3C13.9 1.6 11.4 0 8.4 0 3.8 0 0 3.7 0 8.5c0 7.2 8.6 13.1 15.2 20 .4.4 1.2.4 1.6 0C23.4 21.6 32 15.7 32 8.5 32 3.7 28.2 0 23.6 0z"/></svg>';
+  const COLORS = ["#e0173d", "#ff8fb1", "#111111"];
+  function burst() {
+    const count = 44;
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement("div");
+      el.className = "shard";
+      const angle = (i / count) * Math.PI * 2 + Math.random() * 0.4;
+      const dist = 120 + Math.random() * Math.min(window.innerWidth, window.innerHeight) * 0.6;
+      el.style.setProperty("--s", (32 + Math.random() * 44) + "px");
+      el.style.setProperty("--dx", Math.cos(angle) * dist + "px");
+      el.style.setProperty("--dy", Math.sin(angle) * dist + "px");
+      el.style.setProperty("--r", (Math.random() * 540 - 270) + "deg");
+      el.style.setProperty("--t", (2.8 + Math.random() * 1.4) + "s");
+      el.innerHTML = BROKEN.replace("COLOR", COLORS[i % COLORS.length]);
+      el.addEventListener("animationend", () => el.remove());
+      document.body.appendChild(el);
+    }
+  }
+
+  document.getElementById("little").addEventListener("click", () => {
+    buzz();
+    burst();
+    if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
+    document.body.classList.remove("flash");
+    void document.body.offsetWidth;
+    document.body.classList.add("flash");
+    const pop = document.getElementById("popup");
+    pop.classList.add("show");
+    clearTimeout(window.__popT);
+    window.__popT = setTimeout(() => pop.classList.remove("show"), 1400);
+    const b = document.getElementById("little");
+    b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake");
+  });
+
+  document.getElementById("very").addEventListener("click", () => {
+    window.location.href = CARD_URL;
+  });
+</script>
+</body>
+</html>
