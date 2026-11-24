@@ -111,6 +111,52 @@
     100% { transform: translate(var(--dx), var(--dy)) scale(1.05) rotate(var(--r)); opacity: 0; }
   }
 
+  /* Pesan + kado */
+  #stage {
+    position: fixed; inset: 0; z-index: 5;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 22px; padding: 24px 22px; text-align: center;
+    opacity: 0; transition: opacity 1.2s ease;
+  }
+  #stage.in { opacity: 1; }
+  .gift-msg {
+    max-width: 440px; margin: 0;
+    font-size: clamp(1rem, 4.1vw, 1.2rem); line-height: 1.75; font-style: italic;
+    text-shadow: 0 0 12px var(--bg), 0 0 6px var(--bg);
+  }
+  #gift {
+    width: 170px; height: auto; padding: 0; border: 0;
+    background: none; background-image: none; filter: none;
+    color: var(--ink); display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  #gift svg { width: 170px; height: 160px; overflow: visible; animation: giftBob 1.5s ease-in-out infinite; filter: drop-shadow(0 6px 8px rgba(0,0,0,.3)); }
+  #gift .tap { font-size: .8rem; letter-spacing: .18em; text-transform: uppercase; opacity: .75; animation: tapPulse 1.5s ease-in-out infinite; }
+  @keyframes giftBob { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-7px) rotate(-2.5deg); } }
+  @keyframes tapPulse { 0%,100% { opacity: .35; } 50% { opacity: .9; } }
+  #gift .lid { transform-box: fill-box; transform-origin: center; }
+  #gift .glow { opacity: 0; transition: opacity .6s ease .5s; }
+  #gift.open svg { animation: giftShake .5s ease; }
+  #gift.open .lid { transform: translateY(-60px) rotate(-16deg); opacity: 0; transition: transform .9s ease .5s, opacity .6s ease 1s; }
+  #gift.open .glow { opacity: .95; }
+  #gift.open .tap { animation: none; opacity: 0; transition: opacity .3s; }
+  @keyframes giftShake { 20% { transform: rotate(-6deg) scale(1.05); } 40% { transform: rotate(6deg) scale(1.05); } 60% { transform: rotate(-4deg); } 80% { transform: rotate(3deg); } }
+  .spark {
+    position: fixed; z-index: 6; pointer-events: none;
+    width: var(--s); height: var(--s); margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2);
+    animation: spark 1.9s ease-out forwards;
+  }
+  .spark svg { display: block; width: 100%; height: 100%; }
+  .lightflash {
+    position: fixed; inset: 0; z-index: 70; pointer-events: none; opacity: 0;
+    background: radial-gradient(circle at var(--fx) var(--fy), #ffffff 0%, #fffbe3 45%, #ffe9a8 100%);
+    animation: flashBang 1.8s ease-out forwards;
+  }
+  @keyframes flashBang { 0% { opacity: 0; } 18% { opacity: 1; } 40% { opacity: 1; } 100% { opacity: 0; } }
+  @keyframes spark {
+    0% { transform: translate(0, 0) scale(.3); opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)) scale(1); opacity: 0; }
+  }
+
   .shake { animation: shake .4s; }
   @keyframes shake {
     25% { transform: translateX(-8px); } 75% { transform: translateX(8px); }
@@ -212,15 +258,99 @@
     b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake");
   });
 
+  // ---------- Pesan + kado ----------
+  function showGift() {
+    const stage = document.createElement('div');
+    stage.id = 'stage';
+    stage.innerHTML = `
+      <p class='gift-msg'>I don’t have a way with words or a brush, and I rarely find the right words to speak from the heart. Still, I hope you can feel everything I’ve felt for you all this time, through whatever is waiting behind this screen.</p>
+      <button id='gift' type='button' aria-label='Buka kado'>
+        <svg viewBox='0 0 200 190' aria-hidden='true'>
+          <ellipse class='glow' cx='100' cy='88' rx='56' ry='24' fill='#fff3b0'/>
+          <rect x='35' y='92' width='130' height='88' rx='6' fill='#102746' stroke='#d8b56d' stroke-width='1.5'/>
+          <rect x='90' y='92' width='20' height='88' fill='#fff9ec' stroke='#d8b56d' stroke-width='1.5'/>
+          <g class='lid'>
+            <rect x='25' y='64' width='150' height='34' rx='6' fill='#0b1d35' stroke='#d8b56d' stroke-width='1.5'/>
+            <rect x='90' y='64' width='20' height='34' fill='#fff9ec' stroke='#d8b56d' stroke-width='1.5'/>
+            <path d='M100 64 C70 18 38 44 64 63 C75 70 90 68 100 64Z' fill='#fff9ec' stroke='#d8b56d' stroke-width='2.5'/>
+            <path d='M100 64 C130 18 162 44 136 63 C125 70 110 68 100 64Z' fill='#fff9ec' stroke='#d8b56d' stroke-width='2.5'/>
+            <circle cx='100' cy='64' r='8' fill='#d8b56d' stroke='#a8842f' stroke-width='2'/>
+          </g>
+        </svg>
+        <span class='tap'>tap the gift</span>
+      </button>`;
+    document.body.appendChild(stage);
+
+    // sembunyikan judul & tombol hati
+    const mainEl = document.querySelector('main');
+    mainEl.style.transition = 'opacity .6s';
+    mainEl.style.opacity = 0;
+    mainEl.style.pointerEvents = 'none';
+    setTimeout(() => { mainEl.style.display = 'none'; }, 650);
+    requestAnimationFrame(() => requestAnimationFrame(() => stage.classList.add('in')));
+
+    const gift = stage.querySelector('#gift');
+    gift.addEventListener('click', () => {
+      if (gift.classList.contains('open')) return;
+      gift.classList.add('open');
+      if (navigator.vibrate) navigator.vibrate(60);
+
+      // hati kecil keluar dari kado
+      setTimeout(() => {
+        const r = gift.getBoundingClientRect();
+        const f = document.createElement('div');
+        f.className = 'lightflash';
+        f.style.setProperty('--fx', (r.left + r.width / 2) + 'px');
+        f.style.setProperty('--fy', (r.top + r.height * 0.4) + 'px');
+        f.addEventListener('animationend', () => f.remove());
+        document.body.appendChild(f);
+        for (let i = 0; i < 18; i++) {
+          const s = document.createElement('div');
+          s.className = 'spark';
+          const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.4;
+          const d = 90 + Math.random() * 170;
+          s.style.left = (r.left + r.width / 2) + 'px';
+          s.style.top = (r.top + r.height * 0.4) + 'px';
+          s.style.setProperty('--s', (16 + Math.random() * 20) + 'px');
+          s.style.setProperty('--dx', Math.cos(a) * d + 'px');
+          s.style.setProperty('--dy', Math.sin(a) * d + 'px');
+          s.innerHTML = HEART.replace('COLOR', i % 2 ? '#ff8fb1' : '#e0173d');
+          s.addEventListener('animationend', () => s.remove());
+          document.body.appendChild(s);
+        }
+      }, 600);
+
+      // muat kartu saat kado terbuka, lalu munculkan
+      const frame = document.createElement('iframe');
+      frame.src = CARD_URL;
+      frame.allow = 'autoplay; fullscreen';
+      frame.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;border:0;z-index:50;background:#08172d;opacity:0;transition:opacity .9s';
+      document.body.appendChild(frame);
+      setTimeout(() => { frame.style.opacity = 1; }, 1300);
+      setTimeout(() => {
+        clearInterval(rainTimer);
+        rain.style.display = 'none';
+        stage.remove();
+      }, 3300);
+    });
+  }
+
   // ---------- Musik + buka kartu ----------
-  const MUSIC_URL = "https://anniversary-2nd-xi.vercel.app/public/music/Lana%20Del%20Rey%20-%20Young%20and%20Beautiful(MP3_160K).mp3";
+  const MUSIC_URLS = [
+    "https://anniversary-2nd-xi.vercel.app/Lana%20Del%20Rey%20-%20Young%20and%20Beautiful(MP3_160K).mp3",
+    "https://anniversary-2nd-xi.vercel.app/public/music/Lana%20Del%20Rey%20-%20Young%20and%20Beautiful(MP3_160K).mp3"
+  ];
   let entered = false;
   document.getElementById("very").addEventListener("click", () => {
     if (entered) return;
     entered = true;
 
     // musik mulai tepat saat klik (ini yang membuat browser mengizinkan)
-    const music = new Audio(MUSIC_URL);
+    let mi = 0;
+    const music = new Audio(MUSIC_URLS[0]);
+    music.addEventListener("error", () => {
+      if (++mi < MUSIC_URLS.length) { music.src = MUSIC_URLS[mi]; music.play().catch(() => {}); }
+    });
     music.loop = true;
     music.volume = 0;
     music.play().catch(() => {});
@@ -231,15 +361,8 @@
       if (v >= 0.85) clearInterval(fade);
     }, 120);
 
-    // hentikan hujan hati, tampilkan kartu layar penuh
-    clearInterval(rainTimer);
-    rain.style.display = "none";
-    const frame = document.createElement("iframe");
-    frame.src = CARD_URL;
-    frame.allow = "autoplay; fullscreen";
-    frame.style.cssText = "position:fixed;inset:0;width:100%;height:100%;border:0;z-index:50;background:#08172d;opacity:0;transition:opacity .8s";
-    document.body.appendChild(frame);
-    requestAnimationFrame(() => requestAnimationFrame(() => { frame.style.opacity = 1; }));
+    // tampilkan pesan + kado (hujan hati tetap turun)
+    showGift();
 
     // tombol kecil untuk jeda / putar musik
     const t = document.createElement("button");
