@@ -364,7 +364,7 @@
         }
       }, 600);
 
-     // muat kartu saat kado terbuka, lalu munculkan
+            // muat kartu saat kado terbuka, lalu munculkan
       const frame = document.createElement('iframe');
       frame.src = CARD_URL;
       frame.allow = 'autoplay; fullscreen';
@@ -390,12 +390,25 @@
     entered = true;
 
     // musik mulai tepat saat klik (ini yang membuat browser mengizinkan)
-    let mi = 0;
+    // urutan lagu: Young and Beautiful > Infinity > ulang dari awal
+    const NEXT_SONG = "infinity.mp3";
+    let track = 0, mi = 0;
     const music = new Audio(MUSIC_URLS[0]);
     music.addEventListener("error", () => {
-      if (++mi < MUSIC_URLS.length) { music.src = MUSIC_URLS[mi]; music.play().catch(() => {}); }
+      if (track === 0 && ++mi < MUSIC_URLS.length) {
+        music.src = MUSIC_URLS[mi]; music.play().catch(() => {});
+      } else if (track === 1) {
+        // file Infinity tidak ditemukan: kembali ke lagu pertama
+        track = 0; mi = 0; music.src = MUSIC_URLS[0]; music.play().catch(() => {});
+      }
     });
-    music.loop = true;
+    music.addEventListener("ended", () => {
+      track = track === 0 ? 1 : 0;
+      mi = 0;
+      music.src = track === 0 ? MUSIC_URLS[0] : NEXT_SONG;
+      music.play().catch(() => {});
+    });
+    music.loop = false;
     music.volume = 0;
     music.play().catch(() => {});
     let v = 0;
